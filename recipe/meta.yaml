@@ -1,0 +1,32 @@
+{% set data = load_setup_py_data() %}
+
+package:
+  name: "my-package"
+  version: {{ data["version"] }}
+
+source:
+  path: ..
+
+build:
+  script: "{{ PYTHON }} -m pip install . --no-deps --ignore-installed -vv"
+  entry_points:
+    {% for entry in data["entry_points"]["console_scripts"] %}
+    - {{ entry.split("=")[ 0 ].strip() }} = {{ entry.split("=")[1].strip() }}
+    {% endfor %}
+
+requirements:
+  host:
+    - python >=3.6
+  run:
+    - python >=3.6
+    {% for dep in data["install_requires"] %}
+    - {{ dep.lower() }}
+    {% endfor %}
+
+test:
+  source_files:
+    - tests/
+  requires:
+    - pytest
+  commands:
+    - pytest tests/
